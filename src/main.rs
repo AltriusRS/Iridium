@@ -5,9 +5,8 @@ use comrak::{markdown_to_html, ComrakOptions, ComrakExtensionOptions, ComrakPars
 use std::fs::*;
 use std::io::{Read, Write};
 use std::path::PathBuf;
-use std::ops::{Range, RangeInclusive};
 
-const HEADERS: &str = "<link rel=\"stylesheet\" href=\"http://github.com/yrgoldteeth/darkdowncss/raw/master/darkdown.css\" />\n<link rel=\"stylesheet\" href=\"//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/styles/default.min.css\">\n<script src=\"//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/highlight.min.js\"></script>\n<script>hljs.initHighlightingOnLoad();</script>";
+const HEADERS: &str = "<script src=\"//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/highlight.min.js\"></script>\n<script>hljs.initHighlightingOnLoad();</script>";
 
 fn main() {
     let matches = App::new("Iridium")
@@ -50,18 +49,16 @@ fn main() {
                 println!("Discovered {} Files", tot);
                 println!("Migrating incompatible files...");
                 let processes = handle_non_md(paths, input, output);
-                let mut index = tot - processes.len();
                 let ptot = processes.len();
+                let mut index = tot - ptot;
                 println!("Migrated {} Files", index);
-                let mut progress: f32 = ((100 / tot) * index) as f32;
 
                 for (source, destination) in processes {
-                    print!("\rCompiling: {}%", progress);
+                    print!("\rCompiling: {} / {}", index, tot);
                     read_file(source, destination, wm);
                     index += 1;
-                    progress = ((100 / tot) * index) as f32;
                 }
-                println!("\rCompiling: 100%\nCompiled {} Files", ptot);
+                println!("\rCompiled {} Files.        ", ptot);
             } else {
                 println!("")
                 // read_file();
@@ -110,10 +107,10 @@ fn handle_non_md(paths: Vec<PathBuf>, base: &str, out: &str) -> Vec<(String, Str
         let mut tiers = p2.split(root.as_str()).collect::<Vec<&str>>();
         let final_path = format!("{}{}", destination, tiers.pop().unwrap());
 
-        if pathstr.ends_with(".md") {
+        if pathstr.ends_with(".md") || pathstr.ends_with(".markdown") {
             processes.push((pathstr.to_string(), final_path));
         } else {
-            let mut meta = metadata(&destination);
+            let meta = metadata(&destination);
             if meta.is_ok() {
                 make_file(final_path, pathstr.to_string());
             } else {
@@ -160,14 +157,14 @@ fn make_file(path: String, root: String) {
 
 fn read_file(path: String, out_path: String, wm: bool) {
     // Read the file
-    let mut content_file = File::open(path).unwrap();
+    let mut content_file = File::open(&path).unwrap();
     let mut content = String::new();
     content_file.read_to_string(&mut content).unwrap();
 
     // Read the theme's stylesheet
     let mut css: String = String::new();
     let mut res = File::open("./dark.css").unwrap();
-    let read = res.read_to_string(&mut css).unwrap();
+    let _read = res.read_to_string(&mut css).unwrap();
 
     let mut watermark = String::from("<div style=\"text-align: center; padding: 1em; color: #aaa\"><h4>Powered by <a href=\"https://github.com/fatalcenturion/Iridium\">Iridium</a><h4></div>");
     if !wm {
@@ -176,7 +173,7 @@ fn read_file(path: String, out_path: String, wm: bool) {
     // Begin parsing MD to HTML
     let mut html = format!("<!DOCTYPE html>\n<html>\n<head>\n{}\n<style>{}</style>", HEADERS, css);
     html = format!("{}\n<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js\"></script>\n</head>\n<body>\n<div class=\"container\">", html);
-    html = format!("{}\n{}\n</div>{}\n{}</body>\n<html>", html, markdown_to_html(&content.as_str(), &ComrakOptions {
+    html = format!("{}\n{}\n</div>\n{}</body>\n<html>", html, markdown_to_html(&content.as_str(), &ComrakOptions {
         extension: ComrakExtensionOptions {
             strikethrough: true,
             tagfilter: false,
@@ -199,30 +196,35 @@ fn read_file(path: String, out_path: String, wm: bool) {
             unsafe_: true,
             escape: false,
         },
-    }), "<script>$(document).ready(function(){$(\"a\").on(\"click\",function(o){if(\"\"!==this.hash){o.preventDefault();var t=this.hash;$(\"html, body\").animate({scrollTop:$(t).offset().top},800,function(){window.location.hash=t})}})});</script>", watermark);
+    }), watermark);
 
     let matcher = Regex::new(r"<\s*a[^>]*>").unwrap();
     let htclone = html.clone();
     let matches = matcher.find_iter(&htclone).collect::<Vec<regex::Match>>();
     for token in matches {
-        let start = token.start();
-        let end = token.end();
         let content = token.as_str();
         let fragment = Html::parse_fragment(content);
         let body = html.split(content).collect::<Vec<&str>>();
         let slice = fragment.select(&Selector::parse(r#"a"#).unwrap()).next().unwrap();
-        let mut href: String = String::from(slice.value().attr("href").unwrap());
-        if href.starts_with("//") || href.starts_with("http") {
-            // ignore the link
-        } else {
-            if href.contains('#') {
-                let collection = href.split('#').collect::<Vec<&str>>();
-                let sref: String = collection.join(".html#");
-                href = sref;
+        let link = slice.value().attr("href");
+
+        if link.is_some() {
+            let mut href: String = String::from(link.unwrap());
+            let reg = Regex::new(r"\S[^\s]*:/*[^\s]|\S[^\s]*:|/*[^\s]").unwrap();
+            if reg.is_match(href.as_str()) {
+                // ignore the link
             } else {
-                href = format!("{}.html", href);
+                if href.contains('#') {
+                    let collection = href.split('#').collect::<Vec<&str>>();
+                    let sref: String = collection.join(".html#");
+                    href = sref;
+                } else {
+                    href = format!("{}.html", href);
+                }
+                html = body.join(format!("<a href=\"{}\">", href).as_str())
             }
-            html = body.join(format!("<a href=\"{}\">", href).as_str())
+        } else {
+            println!("\rWARNING: {} contains an empty link", path)
         }
     }
     let mut out: File;
@@ -230,7 +232,7 @@ fn read_file(path: String, out_path: String, wm: bool) {
     if meta.is_ok() {
         let trydel = remove_file(&out_path);
         if trydel.is_ok() {
-            out = File::create(&out_path.replace(".md", ".html")).unwrap();
+            out = File::create(&out_path.replace(".md", ".html").replace(".markdown", ".html")).unwrap();
             write(html, &mut out)
         } else {
             println!("Failed to parse \"{}\".\nReason: {:#?}", &out_path, trydel.unwrap_err());
@@ -241,7 +243,7 @@ fn read_file(path: String, out_path: String, wm: bool) {
         let _ = entries.pop();
         let dir_path = entries.join("/");
         create_dir_all(dir_path);
-        out = File::create(&out_path.replace(".md", ".html")).unwrap();
+        out = File::create(&out_path.replace(".md", ".html").replace(".markdown", ".html")).unwrap();
         write(html, &mut out)
     }
 }

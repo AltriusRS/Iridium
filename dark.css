@@ -3,7 +3,7 @@ html {
 }
 
 .container {
-    margin: 2pc 15% 2pc 15%
+    margin: 2em 4em;
 }
 
 body {
@@ -47,22 +47,101 @@ blockquote {
     font-style: italic;
 }
 
+img {
+    max-width: 100%;
+}
+
 table {
-    background-color: #303241;
+    width: 100%;
+    margin: 0;
+    border: 0.2em solid #4b4e65;
+    border-radius: 0.4em;
+    background-color: #333442;
 }
 
 table tr th,
 table tr td {
-    padding: 0.5em;
-    border: 1px solid #4b4e65;
+    padding: 1em;+
+}
+
+table tr th {
+    background-color: #4b4e65;
 }
 
 table tr:nth-child(2n) {
-    background-color: #373a4b;
+    background-color: #494d63;
 }
 
-.hljs, .hljs-subst {
-    color: #000000;
-    background-color: #cacaca;
+/*
+    Paraíso (dark)
+    Created by Jan T. Sott (http://github.com/idleberg)
+    Inspired by the art of Rubens LP (http://www.rubenslp.com.br)
+*/
+
+/* Paraíso Comment */
+.hljs-comment,
+.hljs-quote {
+    color: #8d8687;
+}
+
+/* Paraíso Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-link,
+.hljs-meta {
+    color: #ef6155;
+}
+
+/* Paraíso Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-deletion {
+    color: #f99b15;
+}
+
+/* Paraíso Yellow */
+.hljs-title,
+.hljs-section,
+.hljs-attribute {
+    color: #fec418;
+}
+
+/* Paraíso Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+    color: #48b685;
+}
+
+/* Paraíso Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+    color: #815ba4;
+}
+
+.hljs {
+    display: block;
+    overflow-x: auto;
+    background: #1e2029;
+    color: #a39e9b;
+    padding: 0.5em;
     border-radius: 0.2em;
+}
+
+.hljs-emphasis {
+    font-style: italic;
+}
+
+.hljs-strong {
+    font-weight: bold;
 }
