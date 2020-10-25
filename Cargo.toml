@@ -9,3 +9,5 @@ edition = "2018"
 [dependencies]
 comrak = "0.8.2"
 clap = "2.33.3"
+regex = "1.4.1"
+scraper = "0.12.0"

@@ -1,3 +1,7 @@
+html {
+    scroll-behavior: smooth;
+}
+
 .container {
     margin: 2pc 15% 2pc 15%
 }
@@ -12,11 +16,11 @@ body {
 }
 
 a {
-    color: #e03300;
+    color: #b97ec4;
 }
 
 a:hover {
-    color: #ff4a14;
+    color: #8bb156;
 }
 
 h2 {
@@ -49,6 +53,7 @@ table {
 
 table tr th,
 table tr td {
+    padding: 0.5em;
     border: 1px solid #4b4e65;
 }
 
@@ -57,7 +62,7 @@ table tr:nth-child(2n) {
 }
 
 .hljs, .hljs-subst {
-    color: #444444;
+    color: #000000;
     background-color: #cacaca;
-    border-radius: 1pc;
+    border-radius: 0.2em;
 }
