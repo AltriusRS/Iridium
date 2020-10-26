@@ -60,7 +60,20 @@ fn main() {
                 }
                 println!("\rCompiled {} Files.        ", ptot);
             } else {
-                println!("")
+                let mut nodes = input.clone().split("/").collect::<Vec<&str>>();
+                let file = nodes.pop();
+                let mut root: String = nodes.join("/");
+
+                let mut destination = String::from(output);
+                if !destination.ends_with("/") {
+                    destination = format!("{}/", destination)
+                }
+
+                let pathstr = input.clone();
+                let p2 = pathstr.clone();
+                let mut tiers = p2.split(root.as_str()).collect::<Vec<&str>>();
+                let final_path = format!("{}{}", destination, tiers.pop().unwrap());
+                read_file(pathstr.to_string(), final_path, wm);
                 // read_file();
             }
         } else {
@@ -173,30 +186,16 @@ fn read_file(path: String, out_path: String, wm: bool) {
     // Begin parsing MD to HTML
     let mut html = format!("<!DOCTYPE html>\n<html>\n<head>\n{}\n<style>{}</style>", HEADERS, css);
     html = format!("{}\n<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js\"></script>\n</head>\n<body>\n<div class=\"container\">", html);
-    html = format!("{}\n{}\n</div>\n{}</body>\n<html>", html, markdown_to_html(&content.as_str(), &ComrakOptions {
-        extension: ComrakExtensionOptions {
-            strikethrough: true,
-            tagfilter: false,
-            table: true,
-            autolink: true,
-            tasklist: true,
-            superscript: true,
-            header_ids: None,
-            footnotes: true,
-            description_lists: true,
-        },
-        parse: ComrakParseOptions {
-            smart: false,
-            default_info_string: None,
-        },
-        render: ComrakRenderOptions {
-            hardbreaks: false,
-            github_pre_lang: false,
-            width: 0,
-            unsafe_: true,
-            escape: false,
-        },
-    }), watermark);
+    html = format!("{}\n{}\n</div>\n{}\n<script>{}</script></body>\n<html>", html, parse(content), watermark, "
+    document.addEventListener('DOMContentLoaded', function() {
+	    document.querySelectorAll(\"h1, h2, h3, h4, h5, h6\").forEach(element => {
+		    element.innerHTML += `<div class=\"anchor\" style=\"display:none;\" id=\"${(element.innerText.toLowerCase().replace(/[^\\w]/gmi, \"\")).split(\" \").join(\"-\")}\">Anchor point</div>`;
+		    element.children[0].onclick = () => {let em = document.getElementById(window.location.hash.split(/#|\\?[^\\s]*/g).join(\"\")); console.log(`Navigating to: ${window.location.hash.split(/#|\\?[^\\s]*/g).join(\"\")}`); if(em !== null && em !== undefined) em.parentElement.scrollIntoView({ behavior: 'instant', block: 'start' })}
+		    })
+	let em = document.getElementById(window.location.hash.replace(/#|\\?[^\\s]*/g, \"\"));
+	console.log(`Navigating to: ${window.location.hash.replace(/#|\\?[^\\s]*/g, \"\")}`);
+	if(em !== null && em !== undefined) em.parentElement.scrollIntoView({ behavior: 'instant', block: 'start' })
+}, false);");
 
     let matcher = Regex::new(r"<\s*a[^>]*>").unwrap();
     let htclone = html.clone();
@@ -210,16 +209,16 @@ fn read_file(path: String, out_path: String, wm: bool) {
 
         if link.is_some() {
             let mut href: String = String::from(link.unwrap());
-            let reg = Regex::new(r"\S[^\s]*:/*[^\s]|\S[^\s]*:|/*[^\s]").unwrap();
+            let reg = Regex::new(r"\S[^\s]*:/*[^\s]*|\S[^\s]*:|//[^\s]").unwrap();
             if reg.is_match(href.as_str()) {
                 // ignore the link
             } else {
-                if href.contains('#') {
+                if !href.contains('#') {
+                    href = format!("{}.html", href);
+                } else {
                     let collection = href.split('#').collect::<Vec<&str>>();
                     let sref: String = collection.join(".html#");
                     href = sref;
-                } else {
-                    href = format!("{}.html", href);
                 }
                 html = body.join(format!("<a href=\"{}\">", href).as_str())
             }
@@ -235,7 +234,7 @@ fn read_file(path: String, out_path: String, wm: bool) {
             out = File::create(&out_path.replace(".md", ".html").replace(".markdown", ".html")).unwrap();
             write(html, &mut out)
         } else {
-            println!("Failed to parse \"{}\".\nReason: {:#?}", &out_path, trydel.unwrap_err());
+            println!("Failed to get metadata for \"{}\".\nReason: {:#?}", out_path, trydel.unwrap_err());
         }
     } else {
         let op = out_path.clone();
@@ -250,4 +249,32 @@ fn read_file(path: String, out_path: String, wm: bool) {
 
 fn write(content: String, file: &mut File) {
     file.write(content.as_bytes());
+}
+
+fn parse(content: String) -> String {
+    let parsed = markdown_to_html(&content.as_str(), &ComrakOptions {
+        extension: ComrakExtensionOptions {
+            strikethrough: true,
+            tagfilter: false,
+            table: true,
+            autolink: true,
+            tasklist: true,
+            superscript: true,
+            header_ids: Some("".to_string()),
+            footnotes: true,
+            description_lists: true,
+        },
+        parse: ComrakParseOptions {
+            smart: false,
+            default_info_string: None,
+        },
+        render: ComrakRenderOptions {
+            hardbreaks: false,
+            github_pre_lang: false,
+            width: 0,
+            unsafe_: true,
+            escape: false,
+        },
+    });
+    parsed
 }
