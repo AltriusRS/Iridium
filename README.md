@@ -25,4 +25,5 @@ Iridium is a static site generator, built on top of Rust, a powerful programming
 #### Credits
 
 [TwentyFourMinutes](https://github.com/TwentyFourMinutes) - For letting me use [Venflow](https://github.com/TwentyFourMinutes/Venflow) as a live example of what Iridium can do
+
 [Zane](https://github.com/AnotherZane) - Thanks for helping me make Iridium look so gosh dang good
