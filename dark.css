@@ -1,150 +1,138 @@
-html {
-    background-color: #282a36;
-    scroll-behavior: smooth;
-    width: 100%;
-    height: 100%;
-}
-
-.container {
-    margin: 2em 4em;
-}
-
-body {
-    padding: 20px;
-    color: #ffffff;
-    font-size: 15px;
-    font-family: "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", AppleSDGothicNeo-Medium, 'Segoe UI', 'Malgun Gothic', Verdana, Tahoma, sans-serif;
-    -webkit-font-smoothing: antialiased;
-}
-
-a {
-    color: #b97ec4;
-}
-
-a:hover {
-    color: #8bb156;
-}
-
-h2 {
-    border-bottom: 1px solid #21232d;
-    line-height: 1.7em;
-}
-
-h6 {
-    color: #a4a296;
-}
-
-hr {
-    border: 1px solid #21232d;
-}
-
-pre > code {
-    font-size: .9em;
-    font-family: Consolas, Inconsolata, Courier, monospace;
-}
-
-blockquote {
-    border-left: 4px solid #121319;
-    padding: 0 15px;
-    font-style: italic;
-}
-
-img {
-    max-width: 100%;
-}
-
-table {
-    width: 100%;
+h1, h2, h3, h4, h5, h6, p, blockquote {
     margin: 0;
-    border: 0.2em solid #4b4e65;
-    border-radius: 0.4em;
-    background-color: #333442;
+    padding: 0;
 }
-
-table tr th,
-table tr td {
-    padding: 1em;
-+
+body {
+    font-family: \"Helvetica Neue\", Helvetica, Arial, sans-serif;
+    font-size: 13px;
+    line-height: 18px;
+    color: #fff;
+    background-color: #110F14;
+    margin: 10px 13px 10px 13px;
 }
-
-table tr th {
-    background-color: #4b4e65;
+table {
+    margin: 10px 0 15px 0;
+    border-collapse: collapse;
 }
-
-table tr:nth-child(2n) {
-    background-color: #494d63;
+td,th {
+    border: 1px solid #ddd;
+    padding: 3px 10px;
 }
-
-/*
-    Paraíso (dark)
-    Created by Jan T. Sott (http://github.com/idleberg)
-    Inspired by the art of Rubens LP (http://www.rubenslp.com.br)
-*/
-
-/* Paraíso Comment */
-.hljs-comment,
-.hljs-quote {
-    color: #8d8687;
+th {
+    padding: 5px 10px;
 }
-
-/* Paraíso Red */
-.hljs-variable,
-.hljs-template-variable,
-.hljs-tag,
-.hljs-name,
-.hljs-selector-id,
-.hljs-selector-class,
-.hljs-regexp,
-.hljs-link,
-.hljs-meta {
-    color: #ef6155;
+a {
+    color: #59acf3;
 }
-
-/* Paraíso Orange */
-.hljs-number,
-.hljs-built_in,
-.hljs-builtin-name,
-.hljs-literal,
-.hljs-type,
-.hljs-params,
-.hljs-deletion {
-    color: #f99b15;
+a:hover {
+    color: #a7d8ff;
+    text-decoration: none;
 }
-
-/* Paraíso Yellow */
-.hljs-title,
-.hljs-section,
-.hljs-attribute {
-    color: #fec418;
+a img {
+    border: none;
 }
-
-/* Paraíso Green */
-.hljs-string,
-.hljs-symbol,
-.hljs-bullet,
-.hljs-addition {
-    color: #48b685;
+p {
+    margin-bottom: 9px;
 }
-
-/* Paraíso Purple */
-.hljs-keyword,
-.hljs-selector-tag {
-    color: #815ba4;
+h1, h2, h3, h4, h5, h6 {
+    color: #fff;
+    line-height: 36px;
 }
-
-.hljs {
-    display: block;
-    overflow-x: auto;
-    background: #1e2029;
-    color: #a39e9b;
-    padding: 0.5em;
-    border-radius: 0.2em;
+h1 {
+    margin-bottom: 18px;
+    font-size: 30px;
 }
-
-.hljs-emphasis {
+h2 {
+    font-size: 24px;
+}
+h3 {
+    font-size: 18px;
+}
+h4 {
+    font-size: 16px;
+}
+h5 {
+    font-size: 14px;
+}
+h6 {
+    font-size: 13px;
+}
+hr {
+    margin: 0 0 19px;
+    border: 0;
+    border-bottom: 1px solid #ccc;
+}
+blockquote {
+    padding: 13px 13px 21px 15px;
+    margin-bottom: 18px;
+    font-family:georgia,serif;
+    font-style: italic;
+}
+blockquote:before {
+    content:\"\201C\";
+    font-size:40px;
+    margin-left:-10px;
+    font-family:georgia,serif;
+    color:#eee;
+}
+blockquote p {
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 18px;
+    margin-bottom: 0;
     font-style: italic;
 }
 
-.hljs-strong {
-    font-weight: bold;
+code, pre {
+    font-family: Menlo, Monaco, Andale Mono, Courier New, monospace;
+}
+
+code {
+    padding: 1px 3px;
+    font-size: 12px;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+    background: #334;
+}
+
+pre {
+    display: block;
+    padding: 14px;
+    margin: 0 0 18px;
+    line-height: 16px;
+    font-size: 11px;
+    border: 1px solid #334;
+    white-space: pre;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    background-color: #282a36;
+    border-radius: 6px;
+}
+pre code {
+    font-size: 11px;
+    padding: 0;
+    background: transparent;
+}
+sup {
+    font-size: 0.83em;
+    vertical-align: super;
+    line-height: 0;
+}
+* {
+    -webkit-print-color-adjust: exact;
+}
+@media screen and (min-width: 914px) {
+    body {
+        width: 854px;
+        margin:10px auto;
+    }
+}
+@media print {
+    body,code,pre code,h1,h2,h3,h4,h5,h6 {
+        color: black;
+    }
+    table, pre {
+        page-break-inside: avoid;
+    }
 }
