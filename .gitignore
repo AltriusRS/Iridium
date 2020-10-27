@@ -1,3 +1,7 @@
 /target
 /.idea
 /output
+*/.obsidian
+/.obsidian/config
+/.obsidian/workspace
+/CompDocs

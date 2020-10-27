@@ -12,7 +12,8 @@ Iridium is a static site generator, built on top of Rust, a powerful programming
 > Coming soon!
 
 ## Usage
-> Coming soon!
+> #### Coming soon!
+> ###### [preview](Documentation/introduction)
 
 ## Screenshots
 ![](./media/Pasted%20image%2020201025024807.png)

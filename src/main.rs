@@ -3,12 +3,15 @@ use scraper::{Html, Selector};
 use clap::{Arg, App};
 use comrak::{markdown_to_html, ComrakOptions, ComrakExtensionOptions, ComrakParseOptions, ComrakRenderOptions};
 use std::fs::*;
+use wkhtmltopdf::*;
 use std::io::{Read, Write};
-use std::path::PathBuf;
+use std::path::{PathBuf, Path};
+use std::str::FromStr;
 
 const HEADERS: &str = "<script src=\"//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/highlight.min.js\"></script>\n<script>hljs.initHighlightingOnLoad();</script>";
 
 fn main() {
+    let mut pdf_app = PdfApplication::new().expect("Failed to init PDF application");
     let matches = App::new("Iridium")
         .version("0.3")
         .author("Kevin K. <kbknapp@gmail.com>")
@@ -31,57 +34,101 @@ fn main() {
             .long("no-water-mark")
             .help("Removes the watermark")
             .takes_value(false))
+        .arg(Arg::with_name("pdf")
+            .long("pdf")
+            .help("Renders the output as PDF content, instead of the normal HTML")
+            .takes_value(false))
+        .arg(Arg::with_name("pdf-mirror")
+            .long("pdf-mirror")
+            .help("Renders the output as PDF content, as well as the normal HTML")
+            .takes_value(false))
         .get_matches();
+
     let mut wm = true;
     if matches.is_present("watermark") {
         wm = false;
     }
+
+    let mut pdf = false;
+    if matches.is_present("pdf") {
+        pdf = true;
+    }
+
+    let mut pdfm = false;
+    if matches.is_present("pdf-mirror") {
+        pdfm = true;
+    }
+
+    if pdf && !pdfm {
+        println!("PDF Mode")
+    } else if !pdf && pdfm {
+        println!("PDF Mirror Mode")
+    } else if pdf && pdfm {
+        pdf = false;
+        println!("PDF Mirror Mode")
+    } else {
+        println!("HTML Mode")
+    }
+
+    if pdf || pdfm {
+        wm = false;
+    }
+
     if matches.is_present("in") && matches.is_present("out") {
         let input = matches.value_of("in").unwrap();
         let output = matches.value_of("out").unwrap();
-        let metadata = metadata(input);
-        if metadata.is_ok() {
-            let md = metadata.unwrap();
-            if md.is_dir() {
-                println!("Discovering Files...");
-                let paths = read_directory(input);
-                let tot = paths.len();
-                println!("Discovered {} Files", tot);
-                println!("Migrating incompatible files...");
-                let processes = handle_non_md(paths, input, output);
-                let ptot = processes.len();
-                let mut index = tot - ptot;
-                println!("Migrated {} Files", index);
+        let p = Path::new(input).canonicalize();
+        if p.is_ok() {
+            let pa = p.unwrap();
+            println!("Canonicalized {:#?}", pa);
+            let metadata = metadata(pa);
+            if metadata.is_ok() {
+                let md = metadata.unwrap();
+                if md.is_dir() {
+                    println!("Discovering Files...");
+                    let paths = read_directory(input);
+                    let tot = paths.len();
+                    println!("Discovered {} Files", tot);
+                    println!("Migrating incompatible files...");
+                    let processes = handle_non_md(paths, input, output);
+                    let ptot = processes.len();
+                    let mut index = tot - ptot;
+                    println!("Migrated {} Files", index);
 
-                for (source, destination) in processes {
-                    print!("\rCompiling: {} / {}", index, tot);
-                    read_file(source, destination, wm);
-                    index += 1;
+                    for (source, destination) in processes {
+                        read_file(source.clone(), destination.clone(), wm, false, false, &mut pdf_app);
+                        if pdf || pdfm {
+                            read_file(source, destination, wm, pdf, pdfm, &mut pdf_app)
+                        }
+
+                        index += 1;
+                    }
+                    println!("\rCompiled {} Files.        ", ptot);
+                } else {
+                    let mut nodes = input.clone().split("/").collect::<Vec<&str>>();
+                    let file = nodes.pop();
+                    let mut root: String = nodes.join("/");
+
+                    let mut destination = String::from(output);
+                    if !destination.ends_with("/") {
+                        destination = format!("{}/", destination)
+                    }
+
+                    let pathstr = input.clone();
+                    let p2 = pathstr.clone();
+                    let mut tiers = p2.split(root.as_str()).collect::<Vec<&str>>();
+                    let final_path = format!("{}{}", destination, tiers.pop().unwrap());
+                    read_file(pathstr.to_string(), final_path, wm, pdf, pdfm, &mut pdf_app);
                 }
-                println!("\rCompiled {} Files.        ", ptot);
+                println!("Compilation complete.");
             } else {
-                let mut nodes = input.clone().split("/").collect::<Vec<&str>>();
-                let file = nodes.pop();
-                let mut root: String = nodes.join("/");
-
-                let mut destination = String::from(output);
-                if !destination.ends_with("/") {
-                    destination = format!("{}/", destination)
-                }
-
-                let pathstr = input.clone();
-                let p2 = pathstr.clone();
-                let mut tiers = p2.split(root.as_str()).collect::<Vec<&str>>();
-                let final_path = format!("{}{}", destination, tiers.pop().unwrap());
-                read_file(pathstr.to_string(), final_path, wm);
-                // read_file();
+                println!("An error occurred (step 1): {:#?}", metadata.unwrap_err());
+                std::process::exit(1);
             }
         } else {
-            println!("An error occurred (step 1): {:#?}", metadata.unwrap_err());
-            std::process::exit(1);
+            println!("Failed to canonicalize {}\n{:#?}", input, p.unwrap_err())
         }
-    } else {}
-    println!("Compilation complete.")
+    }
 }
 
 fn read_directory(path: &str) -> Vec<PathBuf> {
@@ -168,7 +215,7 @@ fn make_file(path: String, root: String) {
     }
 }
 
-fn read_file(path: String, out_path: String, wm: bool) {
+fn read_file(path: String, out_path: String, wm: bool, pdf: bool, pdfm: bool, pdf_app: &mut PdfApplication) {
     // Read the file
     let mut content_file = File::open(&path).unwrap();
     let mut content = String::new();
@@ -214,10 +261,19 @@ fn read_file(path: String, out_path: String, wm: bool) {
                 // ignore the link
             } else {
                 if !href.contains('#') {
-                    href = format!("{}.html", href);
+                    if pdf || pdfm {
+                        href = format!("{}.pdf", href);
+                    } else {
+                        href = format!("{}.html", href);
+                    }
                 } else {
+                    let mut sref: String = String::new();
                     let collection = href.split('#').collect::<Vec<&str>>();
-                    let sref: String = collection.join(".html#");
+                    if pdf || pdfm {
+                        sref = collection.join(".pdf");
+                    } else {
+                        sref = collection.join(".html#");
+                    }
                     href = sref;
                 }
                 html = body.join(format!("<a href=\"{}\">", href).as_str())
@@ -239,11 +295,26 @@ fn read_file(path: String, out_path: String, wm: bool) {
     } else {
         let op = out_path.clone();
         let mut entries = op.split("/").collect::<Vec<&str>>();
-        let _ = entries.pop();
+        let name = entries.pop().unwrap();
         let dir_path = entries.join("/");
         create_dir_all(dir_path);
-        out = File::create(&out_path.replace(".md", ".html").replace(".markdown", ".html")).unwrap();
-        write(html, &mut out)
+        if pdf {
+            println!("Compiled: {} (PDF)", &out_path.replace(".md", ".pdf").replace(".markdown", ".pdf"));
+        } else if pdfm {
+            println!("Compiled: {} (PDF)", &out_path.replace(".md", ".pdf").replace(".markdown", ".pdf"));
+            let mut pdf_content = pdf_app.builder()
+                .orientation(Orientation::Landscape)
+                .title(name)
+                .margin(Size::Millimeters(0))
+                .build_from_html(&html)
+                .expect("failed to build pdf");
+
+            pdf_content.save(&out_path.replace(".md", ".pdf").replace(".markdown", ".pdf")).expect("failed to save foo.pdf");
+        } else {
+            println!("Compiled: {} (HTML)", &out_path.replace(".md", ".html").replace(".markdown", ".html"));
+            out = File::create(&out_path.replace(".md", ".html").replace(".markdown", ".html")).unwrap();
+            write(html, &mut out)
+        }
     }
 }
 
