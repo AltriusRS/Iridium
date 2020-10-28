@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{PathBuf, Path};
 use std::fs::{metadata, create_dir_all, File, remove_file};
 use std::io::{Write, Read};
 
@@ -67,4 +67,46 @@ pub(crate) fn make_file(path: String, root: String) {
             println!("Migrated: {}", path);
         }
     }
+}
+
+pub(crate) fn filter(paths: Vec<PathBuf>, src: &str, rule_file: &str) -> Vec<PathBuf> {
+    let mut p2: Vec<PathBuf> = Vec::new();
+    let mut p: String = src.to_string();
+    if !p.ends_with("/") {
+        p = format!("{}/", p);
+    }
+    if rule_file != ".iridium" {
+        p = format
+    } else {
+        p = format!("{}{}", p, rule_file);
+    }
+
+    let mut rule_string = String::new();
+
+    let f = File::open(p);
+
+    let mut ignore = gitignored::Gitignore::new(src, false, true);
+
+    return if f.is_ok() {
+        f.unwrap().read_to_string(&mut rule_string);
+        let liners = rule_string.split("\r").collect::<Vec<&str>>();
+        let l2 = liners.join("");
+        let mut lines = l2.split("\n").collect::<Vec<&str>>();
+
+        // filter paths
+        for path in paths {
+            if !ignore.ignores(&*lines, &path) {
+                if path.to_str().unwrap().contains(".iridium") {
+                    println!("Ignoring: {:#?} ", path);
+                } else {
+                    p2.push(path);
+                }
+            } else {
+                println!("Ignoring: {:#?} ", path);
+            }
+        }
+        p2
+    } else {
+        paths
+    };
 }

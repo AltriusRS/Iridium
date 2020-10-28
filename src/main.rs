@@ -49,7 +49,17 @@ fn main() {
             .short("t")
             .help("Selects the theme to use in the rendering process (Defualt: 'Iridium')")
             .takes_value(true))
+        .arg(Arg::with_name("ignore")
+                 .long("ignore")
+                 .short("ig")
+                 .help("Path to either a .gitignore or a .iridium file")
+                 .takes_value(true))
         .get_matches();
+
+    let mut ignore = ".iridium";
+    if matches.is_present("ignore") {
+        ignore = matches.value_of("ignore").unwrap();
+    }
 
     let mut theme = "Iridium";
     if matches.is_present("theme") {
@@ -92,22 +102,25 @@ fn main() {
         let p = Path::new(input).canonicalize();
         if p.is_ok() {
             let pa = p.unwrap();
-            println!("Canonicalized {:#?}", pa);
             let metadata = metadata(pa);
             if metadata.is_ok() {
                 let md = metadata.unwrap();
                 if md.is_dir() {
                     println!("Discovering Files...");
-                    let paths = read_directory(input);
-                    let tot = paths.len();
+                    let mut paths = read_directory(input);
+                    let mut tot: isize = paths.len() as isize;
                     println!("Discovered {} Files", tot);
+                    paths = non_md::filter(paths, input, ignore);
+                    let t1: isize = tot;
+                    tot = paths.len() as isize;
+                    println!("Ignoring {} files", t1-tot);
                     println!("Migrating incompatible files...");
                     let processes = handle_non_md(paths, input, output);
-                    let mut ptot = processes.len();
+                    let mut ptot: isize = processes.len() as isize;
                     if pdf || pdfm {
                         ptot = ptot * 2
                     }
-                    let mut index = tot - ptot;
+                    let mut index: isize = tot - ptot;
 
                     for (source, destination) in processes {
                         read_file(source, destination, wm, pdf, pdfm, &mut pdf_app, theme);
