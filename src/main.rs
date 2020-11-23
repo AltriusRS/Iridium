@@ -1,6 +1,5 @@
 use clap::{Arg, App};
 use std::fs::*;
-use wkhtmltopdf::*;
 use std::io::{Read, Write};
 use std::path::{PathBuf, Path};
 use std::str::FromStr;
@@ -13,7 +12,6 @@ mod non_md;
 const HEADERS: &str = "<script src=\"//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/highlight.min.js\"></script>\n<script>hljs.initHighlightingOnLoad();</script>";
 
 fn main() {
-    let mut pdf_app = PdfApplication::new().expect("Failed to init PDF application");
     let matches = App::new("Iridium")
         .version("0.3")
         .author("Thomas B. <tom.b.2k2@gmail.com>")
@@ -36,24 +34,15 @@ fn main() {
             .long("no-water-mark")
             .help("Removes the watermark")
             .takes_value(false))
-        .arg(Arg::with_name("pdf")
-            .long("pdf")
-            .help("Renders the output as PDF content, instead of the normal HTML")
-            .takes_value(false))
-        .arg(Arg::with_name("pdf-mirror")
-            .long("pdf-mirror")
-            .help("Renders the output as PDF content, as well as the normal HTML")
-            .takes_value(false))
         .arg(Arg::with_name("theme")
             .long("theme")
             .short("t")
-            .help("Selects the theme to use in the rendering process (Defualt: 'Iridium')")
+            .long_help("Selects the theme to use in the rendering process (Default: 'Iridium')\nAvailable themes:\nIridium\nIridium-light\nNoir\nNeon - Produced by Jas777 on GitHub")
             .takes_value(true))
         .arg(Arg::with_name("ignore")
-                 .long("ignore")
-                 .short("ig")
-                 .help("Path to either a .gitignore or a .iridium file")
-                 .takes_value(true))
+            .long("ignore")
+            .help("Path to either a .gitignore or a .iridium file")
+            .takes_value(true))
         .get_matches();
 
     let mut ignore = ".iridium";
@@ -68,31 +57,6 @@ fn main() {
 
     let mut wm = true;
     if matches.is_present("watermark") {
-        wm = false;
-    }
-
-    let mut pdf = false;
-    if matches.is_present("pdf") {
-        pdf = true;
-    }
-
-    let mut pdfm = false;
-    if matches.is_present("pdf-mirror") {
-        pdfm = true;
-    }
-
-    if pdf && !pdfm {
-        println!("PDF Mode")
-    } else if !pdf && pdfm {
-        println!("PDF Mirror Mode")
-    } else if pdf && pdfm {
-        pdf = false;
-        println!("PDF Mirror Mode")
-    } else {
-        println!("HTML Mode")
-    }
-
-    if pdf || pdfm {
         wm = false;
     }
 
@@ -113,21 +77,15 @@ fn main() {
                     paths = non_md::filter(paths, input, ignore);
                     let t1: isize = tot;
                     tot = paths.len() as isize;
-                    println!("Ignoring {} files", t1-tot);
+                    println!("Ignoring {} files", t1 - tot);
                     println!("Migrating incompatible files...");
                     let processes = handle_non_md(paths, input, output);
                     let mut ptot: isize = processes.len() as isize;
-                    if pdf || pdfm {
-                        ptot = ptot * 2
-                    }
                     let mut index: isize = tot - ptot;
 
                     for (source, destination) in processes {
-                        read_file(source, destination, wm, pdf, pdfm, &mut pdf_app, theme);
+                        read_file(source, destination, wm, theme);
                         index += 1;
-                        if pdf || pdfm {
-                            index += 1;
-                        }
                     }
                     println!("Migrated {} Files", index);
                     println!("Compiled {} Files", ptot);
@@ -145,7 +103,7 @@ fn main() {
                     let p2 = pathstr.clone();
                     let mut tiers = p2.split(root.as_str()).collect::<Vec<&str>>();
                     let final_path = format!("{}{}", destination, tiers.pop().unwrap());
-                    read_file(pathstr.to_string(), final_path, wm, pdf, pdfm, &mut pdf_app, theme);
+                    read_file(pathstr.to_string(), final_path, wm, theme);
                 }
                 println!("Compilation complete.");
             } else {
@@ -177,7 +135,7 @@ fn read_directory(path: &str) -> Vec<PathBuf> {
     paths
 }
 
-fn read_file(path: String, out_path: String, wm: bool, pdf: bool, pdfm: bool, pdf_app: &mut PdfApplication, theme: &str) {
+fn read_file(path: String, out_path: String, wm: bool, theme: &str) {
     // Read the file
     let mut content_file = File::open(&path).unwrap();
     let mut content = String::new();
@@ -204,8 +162,6 @@ fn read_file(path: String, out_path: String, wm: bool, pdf: bool, pdfm: bool, pd
 	if(em !== null && em !== undefined) em.parentElement.scrollIntoView({ behavior: 'instant', block: 'start' })
 }, false);");
 
-    let ht2 = html.clone();
-    let pdfc = relink(ht2, "pdf");
     html = relink(html, "html");
 
     let mut out: File;
@@ -217,63 +173,17 @@ fn read_file(path: String, out_path: String, wm: bool, pdf: bool, pdfm: bool, pd
     if meta.is_ok() {
         let trydel = remove_file(&out_path);
         if trydel.is_ok() {
-            if pdf {
-                println!("Compiled: {} (PDF)", &out_path.replace(".md", ".pdf").replace(".markdown", ".pdf"));
-                let mut pdf_content = pdf_app.builder()
-                    .orientation(Orientation::Landscape)
-                    .title(&*name)
-                    .margin(Size::Millimeters(0))
-                    .build_from_html(&pdfc)
-                    .expect("failed to build pdf");
-                pdf_content.save(&out_path.replace(".md", ".pdf").replace(".markdown", ".pdf")).expect("failed to save foo.pdf");
-            } else if pdfm {
-                println!("Compiled: {} (PDF)", &out_path.replace(".md", ".pdf").replace(".markdown", ".pdf"));
-                let mut pdf_content = pdf_app.builder()
-                    .orientation(Orientation::Landscape)
-                    .title(&*name)
-                    .margin(Size::Millimeters(0))
-                    .build_from_html(&pdfc)
-                    .expect("failed to build pdf");
-                pdf_content.save(&out_path.replace(".md", ".pdf").replace(".markdown", ".pdf")).expect("failed to save foo.pdf");
-                println!("Compiled: {} (HTML)", &out_path.replace(".md", ".html").replace(".markdown", ".html"));
-                out = File::create(&out_path.replace(".md", ".html").replace(".markdown", ".html")).unwrap();
-                write(html, &mut out);
-            } else {
-                println!("Compiled: {} (HTML)", &out_path.replace(".md", ".html").replace(".markdown", ".html"));
-                out = File::create(&out_path.replace(".md", ".html").replace(".markdown", ".html")).unwrap();
-                write(html, &mut out)
-            }
+            println!("Compiled: {}", &out_path.replace(".md", ".html").replace(".markdown", ".html"));
+            out = File::create(&out_path.replace(".md", ".html").replace(".markdown", ".html")).unwrap();
+            write(html, &mut out)
         } else {
             println!("Failed to get metadata for \"{}\".\nReason: {:#?}", out_path, trydel.unwrap_err());
         }
     } else {
         create_dir_all(dir_path);
-        if pdf {
-            println!("Compiled: {} (PDF)", &out_path.replace(".md", ".pdf").replace(".markdown", ".pdf"));
-            let mut pdf_content = pdf_app.builder()
-                .orientation(Orientation::Landscape)
-                .title(&*name)
-                .margin(Size::Millimeters(0))
-                .build_from_html(&pdfc)
-                .expect("failed to build pdf");
-            pdf_content.save(&out_path.replace(".md", ".pdf").replace(".markdown", ".pdf")).expect("failed to save foo.pdf");
-        } else if pdfm {
-            println!("Compiled: {} (PDF)", &out_path.replace(".md", ".pdf").replace(".markdown", ".pdf"));
-            let mut pdf_content = pdf_app.builder()
-                .orientation(Orientation::Landscape)
-                .title(&*name)
-                .margin(Size::Millimeters(0))
-                .build_from_html(&pdfc)
-                .expect("failed to build pdf");
-            pdf_content.save(&out_path.replace(".md", ".pdf").replace(".markdown", ".pdf")).expect("failed to save foo.pdf");
-            println!("Compiled: {} (HTML)", &out_path.replace(".md", ".html").replace(".markdown", ".html"));
-            out = File::create(&out_path.replace(".md", ".html").replace(".markdown", ".html")).unwrap();
-            write(html, &mut out);
-        } else {
-            println!("Compiled: {} (HTML)", &out_path.replace(".md", ".html").replace(".markdown", ".html"));
-            out = File::create(&out_path.replace(".md", ".html").replace(".markdown", ".html")).unwrap();
-            write(html, &mut out)
-        }
+        println!("Compiled: {}", &out_path.replace(".md", ".html").replace(".markdown", ".html"));
+        out = File::create(&out_path.replace(".md", ".html").replace(".markdown", ".html")).unwrap();
+        write(html, &mut out)
     }
 }
 

@@ -76,7 +76,7 @@ pub(crate) fn filter(paths: Vec<PathBuf>, src: &str, rule_file: &str) -> Vec<Pat
         p = format!("{}/", p);
     }
     if rule_file != ".iridium" {
-        p = format
+        p = format!("{}{}", p, rule_file);
     } else {
         p = format!("{}{}", p, rule_file);
     }
@@ -96,7 +96,8 @@ pub(crate) fn filter(paths: Vec<PathBuf>, src: &str, rule_file: &str) -> Vec<Pat
         // filter paths
         for path in paths {
             if !ignore.ignores(&*lines, &path) {
-                if path.to_str().unwrap().contains(".iridium") {
+                let p = path.to_str();
+                if path.to_str().unwrap().contains(".iridium") || path.to_str().unwrap().contains(".git") {
                     println!("Ignoring: {:#?} ", path);
                 } else {
                     p2.push(path);

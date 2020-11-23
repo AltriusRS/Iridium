@@ -47,14 +47,13 @@ pub(crate) fn relink(h: String, replacement: &str) -> String {
             if reg.is_match(href.as_str()) {
                 // ignore the link
             } else {
-                if href.ends_with(".md") || href.ends_with(".markdown") {
-                    href = href.replace(".md", "").replace(".markdown", "");
-                    href = format!("{}.{}", href, replacement);
-                } else if href.contains('#') {
+                if href.contains('#') {
                     let mut sref: String = String::new();
                     let collection = href.split('#').collect::<Vec<&str>>();
                     sref = collection.join(&*format!(".{}#", replacement));
                     href = sref;
+                } else if href.ends_with(".md") || href.ends_with(".markdown") {
+                    href = href.replace(".md", replacement).replace(".markdown", replacement);
                 }
                 html = body.join(format!("<a href=\"{}\">", href).as_str())
             }
