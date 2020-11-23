@@ -8,12 +8,7 @@
 What is Iridium?
 Iridium is a static site generator, built on top of Rust, a powerful programming language known for it's speed, safety, and efficiency. It is powered by [MarkDown](https://en.wikipedia.org/wiki/Markdown) a [Markup](https://en.wikipedia.org/wiki/Markup_language) language that is designed to provide minimal coding for maximum output.
 
-## Installation
-> Coming soon!
-
-## Usage
-> #### Coming soon!
-> ###### [preview](Documentation/introduction.md)
+## [Installation and Usage](Documentation/introduction.md)
 
 ## Screenshots
 ![](./media/Pasted%20image%2020201025024807.png)
