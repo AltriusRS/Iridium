@@ -1,5 +1,5 @@
 [package]
-name = "iridium"
+name = "iridium-md"
 version = "0.1.0"
 authors = ["fatalcenturion <tom.b.2k2@gmail.com>"]
 edition = "2018"
