@@ -11,7 +11,10 @@ Because I wanted to make my own static site generator, I did not want to use X.
 
 ## How do I install Iridium?
 Simply download the binary for your platform from our [releases](https://github.com/fatalcenturion/Iridium/releases/) page
-> Note, currently Iridium can only be installed on Linux devices.
+Or you can install it from the command line using
+```sh
+cargo install iridium-md
+```
 
 ## How do you use Iridium?
 You can learn the basics of using Iridum in our [quick start guide](quickstart.md)
