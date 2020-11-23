@@ -14,7 +14,7 @@ Simply download the binary for your platform from our [releases](https://github.
 > Note, currently Iridium can only be installed on Linux devices.
 
 ## How do you use Iridium?
-~~You can learn the basics of using Iridum in our [quick start guide](quickstart)~~ (under construction)
+You can learn the basics of using Iridum in our [quick start guide](quickstart.md)
 
 ## How do i view the output?
 You can open the files in any web browser, it is recommended to use either Firefox, or Google Chrome for viewing Iridium's files
