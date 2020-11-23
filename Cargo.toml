@@ -3,9 +3,13 @@ name = "iridium"
 version = "0.1.0"
 authors = ["fatalcenturion <tom.b.2k2@gmail.com>"]
 edition = "2018"
-
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+license = "MIT OR Apache-2.0"
+description = "A quick, easy to use CLI tool for converting markdown to HTML"
+readme = "README.md"
+homepage = "https://github.com/fatalcenturion/Iridium"
+repository = "https://github.com/fatalcenturion/Iridium"
+keywords = ["cli", "html", "markdown", "md", "converter"]
+categories = ["command-line-utilities"]
 
 [dependencies]
 comrak = "0.8.2"

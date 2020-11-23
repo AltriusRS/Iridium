@@ -13,7 +13,7 @@ const HEADERS: &str = "<script src=\"//cdnjs.cloudflare.com/ajax/libs/highlight.
 
 fn main() {
     let matches = App::new("Iridium")
-        .version("0.3")
+        .version("0.1.0")
         .author("Thomas B. <tom.b.2k2@gmail.com>")
         .about("A static site generator for the modern era.")
         .arg(Arg::with_name("in")
